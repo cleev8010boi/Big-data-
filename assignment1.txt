@@ -1,5 +1,5 @@
 1. Store raw data into hdfs location
-
+hdfs dfs -put /home/cloudera/cleev1/sales_order_data.csv /assignment_one
 
 2. Create a internal hive table "sales_order_csv" which will store csv data sales_order_csv .. make sure to skip header row while creating table
 create table sales_order_csv 
