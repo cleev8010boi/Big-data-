@@ -90,7 +90,7 @@ second table
 
 
 
------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
 16. Perform inner join, left join and right join based on the agent column and after joining the table export that data into your local system.
 
 
