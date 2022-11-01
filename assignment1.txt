@@ -1,6 +1,10 @@
 1. Store raw data into hdfs location
 hdfs dfs -put /home/cloudera/cleev1/sales_order_data.csv /assignment_one
 
+#CAN BE IGNORED. i will create a database called assignment_one to store the internal hive tables sales_order_csv and sales_order_orc.
+hive > create database assignment_one;
+hive > use assignment_one;
+
 2. Create a internal hive table "sales_order_csv" which will store csv data sales_order_csv .. make sure to skip header row while creating table
 create table sales_order_csv 
 (
@@ -68,23 +72,29 @@ from sales_order_csv insert overwrite table sales_order_orc select *;
 
 ----------------------------------------------------------------------------------------
 a. Calculatye total sales per year:
-select year_id, sum(sales) as total_sales_per year from sale_orc group by year_id;
+select year_id, sum(sales) as total_sales_per year from sales_order_orc group by year_id;
 
 b. Find a product for which maximum orders were placed: 
-select product_line, max(order_line_number) as product_with_max_orders from sale_order_orc group by product_line order by product_with_max_orders desc limit 1;
+1st solution. select product_line,order_line_number as product_with_max_orders from sales_order_orc order by order_line_number desc limit 1;
+2nd solution. select product_line, max(order_line_number) as product_with_max_orders from sales_order_orc group by product_line order by product_with_max_orders desc limit 1;
+
 
 c. Calculate the total sales for each quarter: 
-select qtr_id, sum(sales) as total_sales_per_qtr from sale_orc group by qtr_id;
+select qtr_id, sum(sales) as total_sales_per_qtr from sales_order_orc group by qtr_id;
 
 d. In which quarter sales was minimum:
-select qtr_id, min(sales) as min_sales_qtr from sales_order_orc group by qtr_id order by min_sales_qtr asc;
+1st solution. select sales,qtr_id as quarter_with_min_sales from sale_orc order by sales asc limit 1;
+2nd solution. select qtr_id, min(sales) as min_sales_qtr from sales_order_orc group by qtr_id order by min_sales_qtr asc;
 
 e. In which country sales was maximum and in which country sales was minimum:
-1. select sales,country from sale_orc order by sales desc limit 1;
-2. select sales,country from sale_orc order by sales asc limit 1;
+(To get max sales in a country.) 
+select sales,country from sales_order_orc order by sales desc limit 1;
+(To get min sales in a country.) 
+select sales,country from sales_order_orc order by sales asc limit 1;
 
 f. Calculate quartelry sales for each city:
-select city,year_id,qtr_id, sum(sales) as qtr_sales_per_city from sale_order_orc group by city,year_id,qtr_id;
+select city,year_id,qtr_id, sum(sales) as qtr_sales_per_city from sales_order_orc group by city,year_id,qtr_id;
 
-h. Find a month for each year in which maximum number of quantities were sold:
+h. Find a month for each year in which maximum number of quantities were sold: #(I know this isn't the right solution so I would ask for some advice on this) 
+select year_id,month_id,max(quantity_order) as max_quantity_year_month from sales_order_orc group by year_id,month_id;
 
