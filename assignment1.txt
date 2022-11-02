@@ -72,19 +72,18 @@ from sales_order_csv insert overwrite table sales_order_orc select *;
 
 ----------------------------------------------------------------------------------------
 a. Calculatye total sales per year:
-select year_id, sum(sales) as total_sales_per year from sales_order_orc group by year_id;
+select year_id, sum(sales) as total_sales_per_year from sales_order_orc group by year_id;
 
 b. Find a product for which maximum orders were placed: 
-1st solution. select product_line,order_line_number as product_with_max_orders from sales_order_orc order by order_line_number desc limit 1;
-2nd solution. select product_line, max(order_line_number) as product_with_max_orders from sales_order_orc group by product_line order by product_with_max_orders desc limit 1;
+select product_line, max(order_line_number) as product_with_max_orders from sales_order_orc group by product_line order by product_with_max_orders desc limit 1;
 
 
 c. Calculate the total sales for each quarter: 
 select qtr_id, sum(sales) as total_sales_per_qtr from sales_order_orc group by qtr_id;
 
 d. In which quarter sales was minimum:
-1st solution. select sales,qtr_id as quarter_with_min_sales from sale_orc order by sales asc limit 1;
-2nd solution. select qtr_id, min(sales) as min_sales_qtr from sales_order_orc group by qtr_id order by min_sales_qtr asc;
+1st solution. select sales,qtr_id as quarter_with_min_sales from sales_order_orc order by sales asc limit 1;
+2nd solution. select qtr_id, min(sales) as min_sales_qtr from sales_order_orc group by qtr_id order by min_sales_qtr asc limit 1;
 
 e. In which country sales was maximum and in which country sales was minimum:
 (To get max sales in a country.) 
