@@ -1,35 +1,6 @@
-This is a real time dataset of the ineuron technical consultant team. You have to perform hive analysis on this given dataset.
+# Will create database hive_project_one to work in
+hive > create database hive_project_one;
 
-Download Dataset 1 - https://drive.google.com/file/d/1WrG-9qv6atP-W3P_-gYln1hHyFKRKMHP/view
-
-Download Dataset 2 - https://drive.google.com/file/d/1-JIPCZ34dyN6k9CqJa-Y8yxIGq6vTVXU/view
-
-Note: both files are csv files. 
-
-
---------------------------------------------------------------------------
-1. create database 
-hive_project_one
-
-2. create table first 
-
-3. create table second
-
-
-4. location in hdfs is /hive_project_one
-
-
-
-
-
-
-
-
-
-
-
-
------------------------------------------------------------------------------
 1. Create a schema based on the given dataset
 create table first 
 (
@@ -46,17 +17,35 @@ row format delimited
 fields terminated by ','
 tblproperties("skip.header.line.count"="1");
 
-2. Dump the data inside the hdfs in the given schema location.
+#create table second schema which will store the Agent Loging Report
+create table second 
+(
+sr_no int,
+agent string,
+date string,
+login_time string,
+logout_time string,
+duration string
+)
+row format delimited
+fields terminated by ','
+tblproperties("skip.header.line.count"="1");
+
+
+# location in hdfs is /hive_project_one for getting the two data sets
+
+2. Dump the data inside hdfs in the given table schema location.
 load data inpath '/hive_project_one/AgentPerformance.csv' into table first;
+load data inpath '/hive_project_one/AgentLogingReport.csv' into table second;
 
 3. List of all agents' names. 
 select agent_name as unique_agents from first group by agent_name; 
 
 4. Find out agent average rating.
-select agent_name,avg_rating from first group by agent_name,avg_rating;
+select agent_name,avg(avg_rating) as average_rating_per_agent from first group by agent_name;
 
 5. Total working days for each agents 
-
+select agent_name,count(distinct date) as working_days_of_each_agent from first group by agent_name;
 
 6. Total query that each agent have taken 
 select agent_name,sum(total_chats) as total_chats_per_agent from first group by agent_name;
@@ -74,24 +63,57 @@ select agent_name,avg_rating from first where avg_rating<3.5 group by agent_name
 select agent_name,avg_rating from first where avg_rating>4.5 group by agent_name,avg_rating;
 
 11. How many feedback agents have received more than 4.5 average
-
+select count(*) as feedback_agents_greater_than4point5 from first where avg_rating >4.5;
 
 12. average weekly response time for each agent 
-
+select s.agent_name,avg(col1[0]*3600+col1[1]*60+col1[2])/3600 from(select agent_name,split(avg_response_time,':') as col1 from first)s group by s.agent_name;
 
 13. average weekly resolution time for each agents 
-
+select s.agent_name,avg(col1[0]*3600+col1[1]*60+col1[2])/3600 from(select agent_name,split(avg_resolution_time,':') as col1 from first)s group by s.agent_name;
 
 14. Find the number of chat on which they have received a feedback 
 select sum(total_chats) as chats_with_feedback from first where total_feedback != 0;
 
 15. Total contribution hour for each and every agents weekly basis 
-second table
+select s.agent,sum(col1[0]*3600+col1*60+col1[2])/3600,s.weekly from(select agent,split(duration,':')as col1, weekofyear(date) as weekly from second)s group by s.agent,s.weekly;
 
-
-
-------------------------------------------------------------------------------------------
 16. Perform inner join, left join and right join based on the agent column and after joining the table export that data into your local system.
+#Inner join 
+select * from (select * from first)f join (select * from second)s on (f.agent_name=s.agent);
 
+#To export data for inner join
+hive -e 'select * from (select * from first)f join (select * from second)s on (f.agent_name=s.agent)' > /home/cloudera/cleev1/inner_join.csv;
+
+#left join
+select * from (select * from first)f left join (select * from second)s on (f.agent_name=s.agent);
+
+#To export data for left join
+hive -e 'select * from (select * from first)f left join (select * from second)s on (f.agent_name=s.agent)' > /home/cloudera/cleev1/left_join.csv ;
+
+#right join
+select * from (select * from first)f right join (select * from second)s on (f.agent_name=s.agent);
+
+#To export data for right join
+hive -e 'select * from (select * from first)f right join (select * from second)s on (f.agent_name=s.agent)' > /home/cloudera/cleev1/right_join.csv;
 
 17. Perform partitioning on top of the agent column and then on top of that perform bucketing for each partitioning.
+# will create a table called partition for partition and bucketing
+create table partition
+(
+sr_no int,
+date string,
+login_time string,
+logout_time string,
+duration string
+)
+partitioned by (agent string)
+clustered by (date) sorted by (date) into 8 buckets
+row format delimited
+fields terminated by ',';
+
+# setting dynamic partition as we do not know how many unique agents are present
+set hive.exec.dynamic.partition=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+#adding data from second table to the partitioned and bucketed table
+insert into table partition partition(Agent) select sr_no,date,login_time,logout_time,duration,agent from second;
